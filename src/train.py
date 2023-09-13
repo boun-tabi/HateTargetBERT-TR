@@ -104,10 +104,10 @@ def train_epoch(epoch, model, train_loader, optimizer, device, criterion, args, 
     for i, (input_ids, attention_mask, label, rule) in enumerate(tqdm(train_loader)):
 
         label = label.to(device)
-        if rule: 
+        if len(rule) > 0: 
             rule = rule.to(device)
 
-        if input_ids:
+        if len(input_ids) > 0:
             input_ids = input_ids.to(device)
             attention_mask = attention_mask.to(device)
             if args.model_type == "HateTargetBERT":
@@ -162,10 +162,10 @@ def evaluate_model(model, val_loader, criterion, device, args):
     with torch.no_grad():
         for input_ids, attention_mask, label, rule in val_loader:
             label = label.to(device)
-            if rule: 
+            if len(rule) > 0: 
                 rule = rule.to(device)
 
-            if input_ids:
+            if len(input_ids) > 0:
                 input_ids = input_ids.to(device)
                 attention_mask = attention_mask.to(device)
                 if args.model_type == "HateTargetBERT":
