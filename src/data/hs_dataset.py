@@ -99,7 +99,7 @@ class HateSpeechDataset(Dataset):
         label = self.labels[idx]
 
         rule = None
-        if self.add_ling_features:
+        if self.include_linguistic_features:
             rule = np.array(self.rules[idx])
 
         # If only rules are needed
