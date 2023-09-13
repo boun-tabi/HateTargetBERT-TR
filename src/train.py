@@ -233,7 +233,7 @@ def main():
 
 
     for epoch in range(args.epochs):
-        train_epoch(epoch, model, train_loader, optimizer, criterion, device, args, only_rules)
+        train_epoch(epoch, model, train_loader, optimizer, criterion, device, args, val_loader, lr_scheduler)
      
         val_metrics = evaluate_model(model, val_loader, criterion, device, args)
 
