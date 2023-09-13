@@ -58,10 +58,10 @@ def setup_data_loaders(args, only_rules):
 
     common_args = {
         'data_path': args.dataset_dir,
-        'sent_max_len': args.sent_max_len,
-        'max_sent_per_news': args.max_sent_per_news,
-        'apply_preprocessing': args.apply_preprocessing,
-        'add_ling_features': args.add_ling_features,
+        'max_sentence_length': args.max_sentence_length, 
+        'max_sentences_per_article': args.max_sentences_per_article, 
+        'apply_preprocessing': args.apply_preprocessing, 
+        'include_linguistic_features': args.include_linguistic_features
     }
 
     train_dataset = HateSpeechDataset(phase="train", tokenizer=tokenizer, **common_args, only_rules=only_rules)
