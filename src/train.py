@@ -57,7 +57,7 @@ def setup_data_loaders(args, only_rules):
         tokenizer = AutoTokenizer.from_pretrained("dbmdz/bert-base-turkish-128k-uncased")
 
     common_args = {
-        'data_path': args.dataset_dir,
+        'data_path': args.dataset_path,
         'max_sentence_length': args.max_sentence_length, 
         'max_sentences_per_article': args.max_sentences_per_article, 
         'apply_preprocessing': args.apply_preprocessing, 
