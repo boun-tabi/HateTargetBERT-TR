@@ -1,0 +1,12 @@
+clean-text
+datasets
+langdetect
+numpy
+pandas
+scikit-learn
+spacy
+spacyturk
+torch 
+transformers
+tqdm
+zemberek-python
