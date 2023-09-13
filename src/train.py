@@ -94,7 +94,7 @@ def setup_model_optimizer(args, is_multigpu):
 
     return model, optimizer
 
-def train_epoch(epoch, model, train_loader, optimizer, device, criterion, args, val_loader=None, lr_scheduler=None):
+def train_epoch(epoch, model, train_loader, optimizer, criterion, device, args, val_loader=None, lr_scheduler=None):
     model.train()
     epoch_loss = 0
     epoch_accuracy = 0
