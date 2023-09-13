@@ -113,7 +113,7 @@ def train_epoch(epoch, model, train_loader, optimizer, criterion, device, args, 
             if args.model_type == "HateTargetBERT":
                 output = model(input_ids, attention_mask, label, rule)
             else:
-                output = model(input_ids, attention_mask, label)
+                output = model(input_ids, attention_mask, labels=label)
             loss = output.loss
             logits = output.logits
         else:
@@ -171,7 +171,7 @@ def evaluate_model(model, val_loader, criterion, device, args):
                 if args.model_type == "HateTargetBERT":
                     output = model(input_ids, attention_mask, label, rule)
                 else:
-                    output = model(input_ids, attention_mask, label)
+                    output = model(input_ids, attention_mask, labels=label)
                 loss = output.loss
                 logits = output.logits
             else:
