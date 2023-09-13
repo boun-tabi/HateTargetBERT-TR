@@ -64,8 +64,8 @@ def setup_data_loaders(args, only_rules):
         'include_linguistic_features': args.include_linguistic_features
     }
 
-    train_dataset = HateSpeechDataset(phase="train", tokenizer=tokenizer, **common_args, only_rules=only_rules)
-    val_dataset = HateSpeechDataset(phase="val", tokenizer=tokenizer, **common_args, only_rules=only_rules)
+    train_dataset = HateSpeechDataset(split="train", tokenizer=tokenizer, **common_args, only_rules=only_rules)
+    val_dataset = HateSpeechDataset(split="val", tokenizer=tokenizer, **common_args, only_rules=only_rules)
     
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True)
     val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True)

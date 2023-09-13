@@ -32,14 +32,14 @@ class HateSpeechDataset(Dataset):
         self._process_dataset(data_path, split)
         
     def __len__(self):
-        return len(self.input_ids)
+        return len(self.labels)
 
     def _load_data(self, data_path, split):
         """
         Load and preprocess data.
         """
         # Load data
-        data = pd.read_csv(data_path, sep="|")
+        data = pd.read_csv(data_path, sep=",")
         data = data[data["split"] == split]
         
         # Apply preprocessing if required
@@ -51,7 +51,7 @@ class HateSpeechDataset(Dataset):
         #     data["text"] = data.apply(lambda row: " ".join(row["sentences"]), axis=1)
         
         # Add linguistic features if required
-        if self.add_ling_features:
+        if self.include_linguistic_features:
             rule_assigner = LinguisticRuleGenerator()
             data = rule_assigner.apply_rules(data)
             self._add_linguistic_features(data)
@@ -83,11 +83,13 @@ class HateSpeechDataset(Dataset):
         data = self._load_data(data_path, phase)
         self.labels = list(data["Label"].values)
         self.idxs = list(data["id"].values)
-        instances = self.tokenizer(data['text'].values, truncation=True, padding=True)
-        self.input_ids = instances['input_ids']
-        self.attention_masks = instances['attention_mask']
-        if self.add_ling_features:
+        if self.include_linguistic_features:
             self.rules = list(data["all_rules"].values)
+        if self.tokenizer:
+
+            instances = self.tokenizer(data['text'].values, truncation=True, padding=True)
+            self.input_ids = instances['input_ids']
+            self.attention_masks = instances['attention_mask']
 
 
     def __getitem__(self, idx):
