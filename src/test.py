@@ -41,8 +41,6 @@ else:
 test_dataset = HateSpeechDataset(split="test", 
                                  tokenizer=tokenizer, 
                                  data_path=args.dataset_dir, 
-                                 max_sentence_length=args.max_sentence_length, 
-                                 max_sentences_per_article=args.max_sentences_per_article, 
                                  apply_preprocessing=args.apply_preprocessing, 
                                  include_linguistic_features=args.include_linguistic_features, 
                                  only_rules=args.only_rules)
