@@ -13,17 +13,13 @@ class HateSpeechDataset(Dataset):
         self,
         split,
         tokenizer,
-        data_path="../data/turkishprintcorpus.csv",
-        max_sentence_length: int = 200,
-        max_sentences_per_article: int = 30,
+        data_path,
         apply_preprocessing=False,
         include_linguistic_features=False,
         only_rules=False
     ):
         self.label_encodings = {"nonhateful": 0, "hateful": 1}
         self.tokenizer = tokenizer
-        self.max_sentence_length = max_sentence_length
-        self.max_sentences_per_article = max_sentences_per_article
         self.apply_preprocessing = apply_preprocessing
         self.include_linguistic_features = include_linguistic_features
         self.only_rules = only_rules
