@@ -36,8 +36,6 @@ def init_args():
 
     # Dataset Configuration
     parser.add_argument('--dataset_path', type=str, default='../data/data_cleaned_sentences_phases_2020-04-16.csv', help='Path to the dataset file.')  
-    parser.add_argument('--max_sentence_length', type=int, default=0, help='Maximum length of a sentence (truncate longer sentences).')  
-    parser.add_argument('--max_sentences_per_article', type=int, default=40, help='Maximum number of sentences to consider per news article.')  
     parser.add_argument('--apply_preprocessing', action='store_true', help='Enable preprocessing of the dataset before training.')  
     parser.add_argument('--include_linguistic_features', action='store_true', help='Include linguistic features')  
     parser.add_argument('--num_classes', type=int, required=True,  help='Number of target classes in the dataset.') 
@@ -58,8 +56,6 @@ def setup_data_loaders(args, only_rules):
 
     common_args = {
         'data_path': args.dataset_path,
-        'max_sentence_length': args.max_sentence_length, 
-        'max_sentences_per_article': args.max_sentences_per_article, 
         'apply_preprocessing': args.apply_preprocessing, 
         'include_linguistic_features': args.include_linguistic_features
     }
