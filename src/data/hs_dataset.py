@@ -39,9 +39,9 @@ class HateSpeechDataset(Dataset):
         data = data[data["split"] == split]
         
         # Apply preprocessing if required
-        #if self.apply_preprocessing:
-        text_cleaner = Cleaner()
-        data = text_cleaner.process_df(data)
+        # if self.apply_preprocessing:
+        # text_cleaner = Cleaner()
+        # data = text_cleaner.process_df(data)
         # else:
         #     data["title"] = data["title"].apply(lambda title: title if isinstance(title, str) else "")
         #     data["text"] = data.apply(lambda row: " ".join(row["sentences"]), axis=1)
