@@ -82,8 +82,7 @@ class HateSpeechDataset(Dataset):
         if self.include_linguistic_features:
             self.rules = list(data["all_rules"].values)
         if self.tokenizer:
-
-            instances = self.tokenizer(data['text'].values, truncation=True, padding=True)
+            instances = self.tokenizer(data['text'].tolist(), truncation=True, padding=True)
             self.input_ids = instances['input_ids']
             self.attention_masks = instances['attention_mask']
 
