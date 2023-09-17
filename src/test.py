@@ -39,14 +39,13 @@ else:
 only_rules = args.model_type == "HateTargetNN"
 test_dataset = HateSpeechDataset(split="test", 
                                  tokenizer=tokenizer, 
-                                 data_path=args.dataset_dir, 
+                                 data_path=args.dataset_path, 
                                  apply_preprocessing=args.apply_preprocessing, 
                                  include_linguistic_features=args.include_linguistic_features, 
-                                 only_rules=args.only_rules)
+                                 only_rules=only_rules)
 
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers, pin_memory=True)
-
-
+model = nn.DataParallel(model)
 device = f'cuda:{args.gpu_id}' if torch.cuda.is_available() else 'cpu'
 model.to(device)
 model.load_state_dict(checkpoint['model_state_dict'])
