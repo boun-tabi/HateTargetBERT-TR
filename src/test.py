@@ -4,7 +4,7 @@ import os
 import torch
 import torch.nn as nn
 from tqdm import tqdm
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from data.hs_dataset import HateSpeechDataset
 from models.hatetargetbert import HateTargetBERT
 from models.hatetargetnn import HateTargetNN
@@ -32,9 +32,12 @@ if args.model_type == "HateTargetNN":
     tokenizer = None
     model = HateTargetNN(num_labels=args.num_classes, rule_dimension=26)
 
-else:
+elif args.model_type == "HateTargetBERT":
     tokenizer = AutoTokenizer.from_pretrained("dbmdz/bert-base-turkish-128k-uncased")
     model = HateTargetBERT(checkpoint="dbmdz/bert-base-turkish-128k-uncased", num_labels=args.num_classes, rule_dimension=26)
+else: 
+    tokenizer = AutoTokenizer.from_pretrained("dbmdz/bert-base-turkish-128k-uncased")
+    model = AutoModelForSequenceClassification.from_pretrained("dbmdz/bert-base-turkish-128k-uncased", num_labels=args.num_classes)
 
 only_rules = args.model_type == "HateTargetNN"
 test_dataset = HateSpeechDataset(split="test", 
@@ -57,6 +60,6 @@ print(test_metrics)
 with open(os.path.join(args.load_from, "test_metrics.json"), "w") as f:
     json.dump(test_metrics, f)
 
-all_predictions = [output.argmax(dim=1).cpu().numpy() for output in test_metrics['outputs']]
-pred_df = test_dataset._get_prediction_results(all_predictions)
-pred_df.to_csv(os.path.join(args.load_from, "test_predictions.csv"), index=False)
+# all_predictions = [output.argmax(dim=1).cpu().numpy() for output in test_metrics['outputs']]
+# pred_df = test_dataset._get_prediction_results(all_predictions)
+# pred_df.to_csv(os.path.join(args.load_from, "test_predictions.csv"), index=False)
