@@ -16,6 +16,16 @@ class dotdict(dict):
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__        
 
+
+pattern_dimensions = {
+    'TS': 5,
+    'TA': 1, 
+    'MN': 5, 
+    'HSI': 5,
+    'PRE': 5,
+    'POST': 5 
+}
+
 # Argument parser
 parser = argparse.ArgumentParser()
 parser.add_argument('--load_from', type=str, default='', help='load the pretrained model from the specified location')
@@ -27,14 +37,20 @@ os.environ['CUDA_VISIBLE_DEVICES'] = f'{gpu_id}'
 checkpoint = torch.load(args.load_from, map_location=f'cuda:{gpu_id}')
 config_file = checkpoint['config_file']
 args = dotdict(json.load(open(config_file, 'r')))
+if args.linguistic_features:
+    pattern_types = args.linguistic_features.split(',') 
+    rule_dimension = sum([pattern_dimensions[p] for p in pattern_types])
+else:
+    pattern_types = None
+    rule_dimension = None
 
 if args.model_type == "HateTargetNN":
     tokenizer = None
-    model = HateTargetNN(num_labels=args.num_classes, rule_dimension=26)
+    model = HateTargetNN(num_labels=args.num_classes, rule_dimension=rule_dimension)
 
 elif args.model_type == "HateTargetBERT":
     tokenizer = AutoTokenizer.from_pretrained("dbmdz/bert-base-turkish-128k-uncased")
-    model = HateTargetBERT(checkpoint="dbmdz/bert-base-turkish-128k-uncased", num_labels=args.num_classes, rule_dimension=26)
+    model = HateTargetBERT(checkpoint="dbmdz/bert-base-turkish-128k-uncased", num_labels=args.num_classes, rule_dimension=rule_dimension)
 else: 
     tokenizer = AutoTokenizer.from_pretrained("dbmdz/bert-base-turkish-128k-uncased")
     model = AutoModelForSequenceClassification.from_pretrained("dbmdz/bert-base-turkish-128k-uncased", num_labels=args.num_classes)
@@ -45,7 +61,8 @@ test_dataset = HateSpeechDataset(split="test",
                                  data_path=args.dataset_path, 
                                  apply_preprocessing=args.apply_preprocessing, 
                                  include_linguistic_features=args.include_linguistic_features, 
-                                 only_rules=only_rules)
+                                 only_rules=only_rules,
+                                 pattern_types=pattern_types)
 
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers, pin_memory=True)
 if args.multigpu: 
