@@ -84,11 +84,11 @@ class HateSpeechDataset(Dataset):
         columns_to_drop += [f'{col}_spans' for col in columns_to_drop if f'{col}_spans' in data.columns]
         data.drop(columns_to_drop, axis=1, inplace=True)
 
-    def _process_dataset(self, data_path, split, pattern_types):
+    def _process_dataset(self, data_path, split):
         """
         Process data for training/validation.
         """
-        data = self._load_data(data_path, split, pattern_types)
+        data = self._load_data(data_path, split)
         self.labels = list(data["Label"].values)
         self.idxs = list(data["id"].values)
         if self.include_linguistic_features:
