@@ -19,7 +19,15 @@ from data.hs_dataset import HateSpeechDataset
 from models.hatetargetbert import HateTargetBERT
 from models.hatetargetnn import HateTargetNN
 
-# Example command: python train.py --name test_hate_model --batch_size 4 --epochs 2 --num_classes 2
+pattern_dimensions = {
+    'TS': 5,
+    'TA': 1, 
+    'MN': 5, 
+    'HSI': 5,
+    'PRE': 5,
+    'POST': 5 
+}
+
 def init_args():
     parser = argparse.ArgumentParser()
     # Experiment Setup
@@ -69,7 +77,7 @@ def setup_data_loaders(dataset_path, apply_preprocessing, model_type, include_li
 
     return train_loader, val_loader
 
-def setup_model_optimizer(model_type, num_classes, lr, optimizer_type='AdamW', rule_dimension=26, is_multigpu=False):
+def setup_model_optimizer(model_type, num_classes, lr, optimizer_type='AdamW', rule_dimension=None, is_multigpu=False):
     if model_type == "HateTargetBERT":
         model = HateTargetBERT(checkpoint="dbmdz/bert-base-turkish-128k-uncased", num_labels=num_classes, rule_dimension=rule_dimension)
     elif model_type == "HateTargetNN":
@@ -210,13 +218,19 @@ def main():
     checkpoint_dir, training_uid, config_file = setup_experiment(args)
     
     only_rules = args.model_type == "HateTargetNN"
-    pattern_types = args.linguistic_features.split(',') if args.linguistic_features else None
+    if args.linguistic_features:
+        pattern_types = args.linguistic_features.split(',') 
+        rule_dimension = sum([pattern_dimensions[p] for p in pattern_types])
+    else:
+        pattern_types = None
+        rule_dimension = None
+
     train_loader, val_loader = setup_data_loaders(args.dataset_path, args.apply_preprocessing, args.model_type, 
                                                   args.include_linguistic_features, only_rules, args.batch_size, args.num_workers, pattern_types)
 
 
     device = 'cpu' if args.gpu_id == '-1' else f'cuda:{args.gpu_id}'
-    model, optimizer = setup_model_optimizer(args.model_type, args.num_classes, args.lr, optimizer_type=args.optimizer_type)
+    model, optimizer = setup_model_optimizer(args.model_type, args.num_classes, args.lr, optimizer_type=args.optimizer_type, rule_dimension=rule_dimension)
     model.to(device)
     criterion = nn.CrossEntropyLoss()
 
