@@ -124,7 +124,7 @@ def main():
     for i in range(1, 6): 
         patterns = list(combinations(pattern_list, i))
         for pattern in patterns: 
-            run_experiment(patterns, args)
+            run_experiment(pattern, args)
 
 
 
