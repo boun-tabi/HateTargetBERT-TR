@@ -34,6 +34,7 @@ def run_experiment(pattern_types, args):
 
     training_uid = datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
     config_file = os.path.join(checkpoint_dir, f'config_{training_uid}.json')
+    json.dump(vars(args), open(config_file, 'w'))
     only_rules = True
     train_loader, val_loader = setup_data_loaders(args.dataset_path, args.apply_preprocessing, args.model_type, 
                                                   args.include_linguistic_features, only_rules, args.batch_size, 
@@ -58,7 +59,7 @@ def run_experiment(pattern_types, args):
 
 
     for epoch in range(args.epochs):
-        train_epoch(epoch, model, train_loader, optimizer, criterion, device, args.model_type, args.step_for_eval, val_loader, lr_scheduler)
+        train_epoch(epoch, model, train_loader, optimizer, criterion, device, args.model_type, args.steps_for_eval, val_loader, lr_scheduler)
      
         val_metrics = evaluate_model(model, val_loader, criterion, device, args.model_type)
 
