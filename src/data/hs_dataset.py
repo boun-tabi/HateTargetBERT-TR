@@ -4,6 +4,14 @@ from torch.utils.data import Dataset
 from data.cleaner import Cleaner
 from data.ling_feat_generator import LinguisticRuleGenerator
 
+pattern_mapping = {
+    'TS': 'target_specific',
+    'TA': 'target_agnostic',
+    'MN': 'misleading_nonhateful', 
+    'HSI': 'hatespeech_indicators',
+    'PRE': 'pre_target',
+    'POST': 'post_target'
+}
 
 class HateSpeechDataset(Dataset):
     """
@@ -16,7 +24,8 @@ class HateSpeechDataset(Dataset):
         data_path,
         apply_preprocessing=False,
         include_linguistic_features=False,
-        only_rules=False
+        only_rules=False, 
+        pattern_types=None
     ):
         self.label_encodings = {"nonhateful": 0, "hateful": 1}
         self.tokenizer = tokenizer
@@ -24,7 +33,10 @@ class HateSpeechDataset(Dataset):
         self.include_linguistic_features = include_linguistic_features
         self.only_rules = only_rules
         self.split = split
-        
+        if not pattern_types:
+            self.pattern_types = list(pattern_mapping.keys())
+        else: 
+            self.pattern_types = pattern_types
         self._process_dataset(data_path, split)
         
     def __len__(self):
@@ -65,18 +77,18 @@ class HateSpeechDataset(Dataset):
         Combine linguistic features and drop individual columns.
         """
         data["all_rules"] = data.apply(lambda row: np.array(
-            row["target_specific"] + [row["target_agnostic"]] + row["misleading_nonhateful"] + row["hatespeech_indicators"] + 
-            row["pre_target"] + row["post_target"]
+            [item for col_key in self.pattern_types for item in row[pattern_mapping[col_key]]]
         ).astype(np.float32), axis=1)
+
         columns_to_drop = ["target_specific", "target_agnostic", "misleading_nonhateful", "hatespeech_indicators", "pre_target", "post_target"]
         columns_to_drop += [f'{col}_spans' for col in columns_to_drop if f'{col}_spans' in data.columns]
         data.drop(columns_to_drop, axis=1, inplace=True)
 
-    def _process_dataset(self, data_path, phase):
+    def _process_dataset(self, data_path, split, pattern_types):
         """
         Process data for training/validation.
         """
-        data = self._load_data(data_path, phase)
+        data = self._load_data(data_path, split, pattern_types)
         self.labels = list(data["Label"].values)
         self.idxs = list(data["id"].values)
         if self.include_linguistic_features:

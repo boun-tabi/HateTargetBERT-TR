@@ -38,6 +38,7 @@ def init_args():
     parser.add_argument('--dataset_path', type=str, default='../data/data_cleaned_sentences_phases_2020-04-16.csv', help='Path to the dataset file.')  
     parser.add_argument('--apply_preprocessing', action='store_true', help='Enable preprocessing of the dataset before training.')  
     parser.add_argument('--include_linguistic_features', action='store_true', help='Include linguistic features')  
+    #parser.add_argument('--linguistic_features', type=str, default=None, choices=[None, 'TA', 'TS', 'PRE', 'POST', 'HSI', 'MN'])
     parser.add_argument('--num_classes', type=int, required=True,  help='Number of target classes in the dataset.') 
 
     # Model and Optimizer Settings
@@ -49,48 +50,48 @@ def init_args():
     return parser.parse_args()
 
 
-def setup_data_loaders(args, only_rules):
+def setup_data_loaders(dataset_path, apply_preprocessing, model_type, include_linguistic_features, only_rules, batch_size, num_workers, pattern_types=None):
     tokenizer = None
-    if args.model_type != "HateTargetNN":
+    if model_type != "HateTargetNN":
         tokenizer = AutoTokenizer.from_pretrained("dbmdz/bert-base-turkish-128k-uncased")
 
     common_args = {
-        'data_path': args.dataset_path,
-        'apply_preprocessing': args.apply_preprocessing, 
-        'include_linguistic_features': args.include_linguistic_features
+        'data_path': dataset_path,
+        'apply_preprocessing': apply_preprocessing, 
+        'include_linguistic_features': include_linguistic_features
     }
 
-    train_dataset = HateSpeechDataset(split="train", tokenizer=tokenizer, **common_args, only_rules=only_rules)
-    val_dataset = HateSpeechDataset(split="val", tokenizer=tokenizer, **common_args, only_rules=only_rules)
+    train_dataset = HateSpeechDataset(split="train", tokenizer=tokenizer, **common_args, only_rules=only_rules, pattern_types=pattern_types)
+    val_dataset = HateSpeechDataset(split="val", tokenizer=tokenizer, **common_args, only_rules=only_rules, pattern_types=pattern_types)
     
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True)
-    val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=True)
+    val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=True)
 
     return train_loader, val_loader
 
-def setup_model_optimizer(args, is_multigpu):
-    if args.model_type == "HateTargetBERT":
-        model = HateTargetBERT(checkpoint="dbmdz/bert-base-turkish-128k-uncased", num_labels=args.num_classes, rule_dimension=26)
-    elif args.model_type == "HateTargetNN":
-        model = HateTargetNN(num_labels=args.num_classes, rule_dimension=26)
+def setup_model_optimizer(model_type, num_classes, lr, optimizer_type='AdamW', rule_dimension=26, is_multigpu=False):
+    if model_type == "HateTargetBERT":
+        model = HateTargetBERT(checkpoint="dbmdz/bert-base-turkish-128k-uncased", num_labels=num_classes, rule_dimension=rule_dimension)
+    elif model_type == "HateTargetNN":
+        model = HateTargetNN(num_labels=num_classes, rule_dimension=rule_dimension)
     else:
-        model = AutoModelForSequenceClassification.from_pretrained("dbmdz/bert-base-turkish-128k-uncased", num_labels=args.num_classes)
+        model = AutoModelForSequenceClassification.from_pretrained("dbmdz/bert-base-turkish-128k-uncased", num_labels=num_classes)
     
     if is_multigpu:
         model = nn.DataParallel(model)
 
     # Optimizer
     optimizers = {
-        "SGD": torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9),
-        "Adam": torch.optim.Adam(model.parameters(), lr=args.lr),
-        "AdamW": torch.optim.AdamW(model.parameters(), lr=args.lr)
+        "SGD": torch.optim.SGD(model.parameters(), lr=lr, momentum=0.9),
+        "Adam": torch.optim.Adam(model.parameters(), lr=lr),
+        "AdamW": torch.optim.AdamW(model.parameters(), lr=lr)
     }
 
-    optimizer = optimizers.get(args.optimizer_type)
+    optimizer = optimizers.get(optimizer_type)
 
     return model, optimizer
 
-def train_epoch(epoch, model, train_loader, optimizer, criterion, device, args, val_loader=None, lr_scheduler=None):
+def train_epoch(epoch, model, train_loader, optimizer, criterion, device, model_type, steps_for_eval=500, val_loader=None, lr_scheduler=None):
     model.train()
     epoch_loss = 0
     epoch_accuracy = 0
@@ -106,7 +107,7 @@ def train_epoch(epoch, model, train_loader, optimizer, criterion, device, args, 
         if len(input_ids) > 0:
             input_ids = input_ids.to(device)
             attention_mask = attention_mask.to(device)
-            if args.model_type == "HateTargetBERT":
+            if model_type == "HateTargetBERT":
                 output = model(input_ids, attention_mask, label, rule)
             else:
                 output = model(input_ids, attention_mask, labels=label)
@@ -125,8 +126,8 @@ def train_epoch(epoch, model, train_loader, optimizer, criterion, device, args, 
         epoch_accuracy += train_acc / len(train_loader)
         epoch_loss += loss / len(train_loader)
 
-        if i % args.steps_for_eval == 0 and i != 0 and val_loader:
-            val_metrics = evaluate_model(model, val_loader, criterion, device, args)
+        if i % steps_for_eval == 0 and i != 0 and val_loader:
+            val_metrics = evaluate_model(model, val_loader, criterion, device, model_type)
             if lr_scheduler:
                 lr_scheduler.step(val_metrics['f1'])
             if val_metrics['f1'] > best_f1:
@@ -147,7 +148,7 @@ def train_epoch(epoch, model, train_loader, optimizer, criterion, device, args, 
     return epoch_loss, epoch_accuracy, metric_data
 
 
-def evaluate_model(model, val_loader, criterion, device, args):
+def evaluate_model(model, val_loader, criterion, device, model_type):
     model.eval()
     
     val_loss = 0
@@ -164,7 +165,7 @@ def evaluate_model(model, val_loader, criterion, device, args):
             if len(input_ids) > 0:
                 input_ids = input_ids.to(device)
                 attention_mask = attention_mask.to(device)
-                if args.model_type == "HateTargetBERT":
+                if model_type == "HateTargetBERT":
                     output = model(input_ids, attention_mask, label, rule)
                 else:
                     output = model(input_ids, attention_mask, labels=label)
@@ -209,10 +210,12 @@ def main():
     checkpoint_dir, training_uid, config_file = setup_experiment(args)
     
     only_rules = args.model_type == "HateTargetNN"
-    train_loader, val_loader = setup_data_loaders(args, only_rules)
+    train_loader, val_loader = setup_data_loaders(args.dataset_path, args.apply_preprocessing, args.model_type, 
+                                                  args.include_linguistic_features, only_rules, args.batch_size, args.num_workers)
+
 
     device = 'cpu' if args.gpu_id == '-1' else f'cuda:{args.gpu_id}'
-    model, optimizer = setup_model_optimizer(args, device.startswith('cuda'))
+    model, optimizer = setup_model_optimizer(args.model_type, args.num_classes, args.lr, optimizer_type=args.optimizer_type)
     model.to(device)
     criterion = nn.CrossEntropyLoss()
 
@@ -229,9 +232,9 @@ def main():
 
 
     for epoch in range(args.epochs):
-        train_epoch(epoch, model, train_loader, optimizer, criterion, device, args, val_loader, lr_scheduler)
+        train_epoch(epoch, model, train_loader, optimizer, criterion, device, args.model_type, args.step_for_eval, val_loader, lr_scheduler)
      
-        val_metrics = evaluate_model(model, val_loader, criterion, device, args)
+        val_metrics = evaluate_model(model, val_loader, criterion, device, args.model_type)
 
         if val_metrics['f1'] > best_f1:
             torch.save({

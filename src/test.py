@@ -48,7 +48,8 @@ test_dataset = HateSpeechDataset(split="test",
                                  only_rules=only_rules)
 
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers, pin_memory=True)
-model = nn.DataParallel(model)
+if args.multigpu: 
+    model = nn.DataParallel(model)
 device = f'cuda:{args.gpu_id}' if torch.cuda.is_available() else 'cpu'
 model.to(device)
 model.load_state_dict(checkpoint['model_state_dict'])
