@@ -38,7 +38,7 @@ def init_args():
     parser.add_argument('--dataset_path', type=str, default='../data/data_cleaned_sentences_phases_2020-04-16.csv', help='Path to the dataset file.')  
     parser.add_argument('--apply_preprocessing', action='store_true', help='Enable preprocessing of the dataset before training.')  
     parser.add_argument('--include_linguistic_features', action='store_true', help='Include linguistic features')  
-    #parser.add_argument('--linguistic_features', type=str, default=None, choices=[None, 'TA', 'TS', 'PRE', 'POST', 'HSI', 'MN'])
+    parser.add_argument('--linguistic_features', type=str, default=None, help='Pattern type combination separated by commas (e.g. TA,MN,POST)')
     parser.add_argument('--num_classes', type=int, required=True,  help='Number of target classes in the dataset.') 
 
     # Model and Optimizer Settings
@@ -210,8 +210,9 @@ def main():
     checkpoint_dir, training_uid, config_file = setup_experiment(args)
     
     only_rules = args.model_type == "HateTargetNN"
+    pattern_types = args.linguistic_features.split(',') if args.linguistic_features else None
     train_loader, val_loader = setup_data_loaders(args.dataset_path, args.apply_preprocessing, args.model_type, 
-                                                  args.include_linguistic_features, only_rules, args.batch_size, args.num_workers)
+                                                  args.include_linguistic_features, only_rules, args.batch_size, args.num_workers, pattern_types)
 
 
     device = 'cpu' if args.gpu_id == '-1' else f'cuda:{args.gpu_id}'
