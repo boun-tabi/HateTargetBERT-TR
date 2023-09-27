@@ -138,7 +138,7 @@ class LinguisticRuleGenerator:
     def __detect_target_agnostic_patterns(self, text):
         detected_spans = [self.__find_spans(rule, text, -1) for rule in self.target_agnostic_rules]
         filtered_spans = [spans for spans in detected_spans if len(spans) > 0]
-        return [len(filtered_spans) / len(self.target_agnostic_rules), filtered_spans]
+        return [len(filtered_spans) / len(self.target_agnostic_rules)], filtered_spans
     
     def __detect_misleading_nonhateful_patterns(self, text):
         pattern_list = []
