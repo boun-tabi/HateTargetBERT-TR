@@ -72,7 +72,7 @@ model.to(device)
 model.load_state_dict(checkpoint['model_state_dict'])
 
 criterion = nn.CrossEntropyLoss()
-test_metrics = evaluate_model(model, test_loader, criterion, device, args)
+test_metrics = evaluate_model(model, test_loader, criterion, device, args.model_type)
 
 print(test_metrics)
 with open(os.path.join(args.load_from, "test_metrics.json"), "w") as f:
