@@ -29,12 +29,16 @@ pattern_dimensions = {
 # Argument parser
 parser = argparse.ArgumentParser()
 parser.add_argument('--load_from', type=str, default='', help='load the pretrained model from the specified location')
+parser.add_argument('--dataset_path', type=str, default='')
+parser.add_argument('--gpu_id', type=int, default=0)
 args = parser.parse_args()
 
-gpu_id = 0
+DATASET = args.dataset_path
+
+gpu_id = args.gpu_id
 os.environ['CUDA_VISIBLE_DEVICES'] = f'{gpu_id}'
 
-checkpoint = torch.load(args.load_from, map_location=f'cuda:{gpu_id}')
+checkpoint = torch.load(args.load_from, map_location=f'cuda:{gpu_id}' if gpu_id != -1 else 'cpu')
 config_file = checkpoint['config_file']
 args = dotdict(json.load(open(config_file, 'r')))
 if args.linguistic_features:
@@ -58,7 +62,7 @@ else:
 only_rules = args.model_type == "HateTargetNN"
 test_dataset = HateSpeechDataset(split="test", 
                                  tokenizer=tokenizer, 
-                                 data_path=args.dataset_path, 
+                                 data_path=args.dataset_path if DATASET == '' else DATASET, 
                                  apply_preprocessing=args.apply_preprocessing, 
                                  include_linguistic_features=args.include_linguistic_features, 
                                  only_rules=only_rules,
@@ -67,7 +71,7 @@ test_dataset = HateSpeechDataset(split="test",
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers, pin_memory=True)
 if args.multigpu: 
     model = nn.DataParallel(model)
-device = f'cuda:{args.gpu_id}' if torch.cuda.is_available() else 'cpu'
+device = f'cuda:{gpu_id}' if gpu_id != -1 else 'cpu'
 model.to(device)
 model.load_state_dict(checkpoint['model_state_dict'])
 
