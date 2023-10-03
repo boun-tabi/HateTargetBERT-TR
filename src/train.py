@@ -197,7 +197,9 @@ def evaluate_model(model, val_loader, criterion, device, model_type):
         'accuracy': val_accuracy,
         'precision': val_precision,
         'recall': val_recall,
-        'f1': val_f1
+        'f1': val_f1, 
+        'predictions': val_outputs,
+        'labels': val_labels
     }
 
 
