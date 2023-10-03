@@ -9,7 +9,7 @@ from data.hs_dataset import HateSpeechDataset
 from models.hatetargetbert import HateTargetBERT
 from models.hatetargetnn import HateTargetNN
 from train import evaluate_model
-
+from pathlib import Path
 class dotdict(dict):
     """dot.notation access to dictionary attributes"""
     __getattr__ = dict.get
@@ -34,7 +34,7 @@ parser.add_argument('--gpu_id', type=int, default=0)
 args = parser.parse_args()
 
 DATASET = args.dataset_path
-
+LOAD_FROM = args.load_from
 gpu_id = args.gpu_id
 os.environ['CUDA_VISIBLE_DEVICES'] = f'{gpu_id}'
 
@@ -79,7 +79,7 @@ criterion = nn.CrossEntropyLoss()
 test_metrics = evaluate_model(model, test_loader, criterion, device, args.model_type)
 
 print(test_metrics)
-with open(os.path.join(args.load_from, "test_metrics.json"), "w") as f:
+with open(os.path.join(Path(LOAD_FROM).parent, "test_metrics.json"), "w") as f:
     json.dump(test_metrics, f)
 
 # all_predictions = [output.argmax(dim=1).cpu().numpy() for output in test_metrics['outputs']]
