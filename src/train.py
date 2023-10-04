@@ -188,9 +188,9 @@ def evaluate_model(model, val_loader, criterion, device, model_type):
             val_labels.extend(label.cpu().numpy())
     
     val_accuracy = accuracy_score(val_labels, val_outputs)
-    val_precision = precision_score(val_labels, val_outputs, average='macro')
-    val_recall = recall_score(val_labels, val_outputs, average='macro')
-    val_f1 = f1_score(val_labels, val_outputs, average='macro')
+    val_precision = precision_score(val_labels, val_outputs)
+    val_recall = recall_score(val_labels, val_outputs)
+    val_f1 = f1_score(val_labels, val_outputs)
 
     return {
         'loss': val_loss / len(val_loader),
