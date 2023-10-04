@@ -1,8 +1,5 @@
 import pandas as pd
 from pathlib import Path
-
-
-
 from sklearn.metrics import f1_score
 import numpy as np
 def bootstrap_test_predictions(all_preds_model_A, all_preds_model_B, all_ground_truth, num_iterations=1000, alpha=0.05):
@@ -64,3 +61,28 @@ for i in range(10):
    GT = all_ground_truth[i*669:(i+1)*669]
    check_significance(pred_A, pred_B, GT)
 
+
+print('--------------------------')
+print('t-test')
+
+from scipy import stats
+from sklearn.metrics import f1_score
+
+f1_scores_model1 = []
+f1_scores_model2 = []
+for i in range(10):
+   pred_A = all_preds_model_A[i*669:(i+1)*669]
+   pred_B = all_preds_model_B[i*669:(i+1)*669]
+   GT = all_ground_truth[i*669:(i+1)*669]
+   f1_scores_model1.append(f1_score(GT, pred_A))
+   f1_scores_model2.append(f1_score(GT, pred_B))
+
+t_stat, p_value = stats.ttest_rel(f1_scores_model1, f1_scores_model2)
+
+print(f"t-statistic: {t_stat}")
+print(f"p-value: {p_value}")
+
+if p_value < 0.05:
+    print("There's a significant difference in the performance of the two models.")
+else:
+    print("There's no significant difference in the performance of the two models.")
