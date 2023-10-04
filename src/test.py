@@ -10,6 +10,20 @@ from models.hatetargetbert import HateTargetBERT
 from models.hatetargetnn import HateTargetNN
 from train import evaluate_model
 from pathlib import Path
+
+import numpy as np
+
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super(NpEncoder, self).default(obj)
+
+
 class dotdict(dict):
     """dot.notation access to dictionary attributes"""
     __getattr__ = dict.get
@@ -80,7 +94,7 @@ test_metrics = evaluate_model(model, test_loader, criterion, device, args.model_
 
 print(test_metrics)
 with open(os.path.join(Path(LOAD_FROM).parent, "test_metrics.json"), "w") as f:
-    json.dump(test_metrics, f)
+    json.dump(test_metrics, f, indent=4, cls=NpEncoder)
 
 # all_predictions = [output.argmax(dim=1).cpu().numpy() for output in test_metrics['outputs']]
 # pred_df = test_dataset._get_prediction_results(all_predictions)
